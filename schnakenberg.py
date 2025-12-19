@@ -60,8 +60,9 @@ for i in range(steps):
 # Final plot
 plt.figure(figsize=(6, 5))
 plt.imshow(u, cmap='viridis', extent=[0, L, 0, L])
-plt.title("Final u pattern (Schnakenberg)")
+plt.title(f"u at t = {steps*dt:.2f} s")
 plt.colorbar()
 
 plt.show()
+
 
