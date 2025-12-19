@@ -19,8 +19,8 @@ y = np.linspace(0, L, N)
 X, Y = np.meshgrid(x, y)
 
 # initialize solutions fields
-u = a + b + 0.01 * np.random.randn(N, N)   # initial u field
-v = b / (a + b)**2 + 0.01 * np.random.randn(N, N)  # initial v field
+u = a + b + 0.01 * np.random.randn(N, N)   # initial u field, adding random perturbations to numerical progress
+v = b / (a + b)**2 + 0.01 * np.random.randn(N, N)  # initial v field, adding random perturbations to numerical progress
 
 # defines the discrete Laplacian
 def laplacian(Z):
@@ -64,3 +64,4 @@ plt.title("Final u pattern (Schnakenberg)")
 plt.colorbar()
 
 plt.show()
+
