@@ -3,13 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Spatial doman and discretization settings
-L = 100 # domain length
-N = 100 # number of grid points per dimension
-dx = 0.1 # grid spacing used in the finite difference formulas
+L = 100         # domain length
+N = 100         # number of grid points per dimension
+dx = 0.1        # grid spacing used in the finite difference formulas
 
 # time discretization
-dt = 0.01          # time step for the forward Euler method
-steps = 20000     # number of iterations
+dt = 0.01           # time step for the forward Euler method
+steps = 20000       # number of iterations
 
 # !!!FOR TA: SHOULD ONLY CHANGE THESE FOUR FOR DIFFERENT PATTERNS!!!
 # Brusselator parameters settings, labeled as project proposal

@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Spatial doman and discretization settings
-L = 50.0           
-N = 200            
-dx = L / N         
+L = 50.0        # domain length     
+N = 200         # grid points      
+dx = L / N      # number of grid points per dimension 
 
 # time discretization
 dt = 1e-3          # time step for the forward Euler method
