@@ -1,25 +1,41 @@
+# import libraries
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parameters
-L = 100.0           # domain length
-N = 200            # grid points
-dx = 0.1
-dt = 0.001
-steps = 100000
+# Spatial doman and discretization settings
+L = 100.0       # domain length
+N = 200         # grid points
+dx = 0.1        # number of grid points per dimension
 
-# model parameters
-a = 0.8  #a sets the response speed of the inhibitor. larger a means faster inhibitor reaction relative to the activator 
-b = 0.2 # b sets how much inhibitor is generated per unit of activator.
-D1 = 0.01 # activator diffusion
-D2 = 0.20 # inhibitor diffusion
+# time discretization
+dt = 0.001 # time step for the forward Euler method
+steps = 100000 # number of iterations
 
+# !!!FOR TA: SHOULD ONLY CHANGE THESE FOUR FOR DIFFERENT PATTERNS!!!
+# Gierer_Meinhardt parameters settings, labeled as project proposal
+a = 0.8  
+b = 0.2 
+# Setting diffusion coefficients
+Du = 0.01 
+Dv = 0.20 
+
+# PSR Logging, saves every 1000 euler steps
 save_every = 1000
 exclude_radius = 5
 psr_series = []
 times = []
 
 def psr_2d(field, r=5):
+    """
+    Computing peak sharpness ratio for the 2D scalar field.
+    i.e. u, activator field.
+
+    This function operates as follows:
+    Finds global maximum peak.
+    Creates a radius around the peak.
+    Computes mean standard deviation of sidelobes
+    Computers PSR following PSR = (peak - mu) / sigma
+    """
     peak_idx = np.unravel_index(np.argmax(field), field.shape)
     pi, pj = peak_idx
     peak_val = field[pi, pj]
@@ -34,16 +50,21 @@ def psr_2d(field, r=5):
         return float("inf") if peak_val > mu else 0.0
     return (float(peak_val) - mu) / sigma
 
-# initialize fields
+# creates the spatial grid
 x = np.linspace(0, L, N)
 y = np.linspace(0, L, N)
 X, Y = np.meshgrid(x, y)
 
+# initialize a nearly uniform baseline concentration, and some small random perturbations 
 u = 1 + 0.01 * np.random.randn(N, N)
 v = a * b + 0.01 * np.random.randn(N, N)
 
-# laplacian (periodic BC) 
+# defines the discrete Laplacian
 def laplacian(Z):
+    """
+    Discrete 2D laplacian implemented with a 5-point stecil
+    with periodic boundary conditions.
+    """
     return (
         -4*Z
         + np.roll(Z, 1, axis=0)
@@ -52,29 +73,34 @@ def laplacian(Z):
         + np.roll(Z, -1, axis=1)
     ) / dx**2
 
-# Time stepping
 plt.ion() #matplotlib functions
 # turn OFF interactive plotting
 # plt.ion()
 
+# time stepping loop (Eulers Method)
 for i in range(steps):
+    # spatial diffusion at the current time step
     Lu = laplacian(u)
     Lv = laplacian(v)
 
-    du = 1 + (u**2 / v) - u + D1 * Lu
-    dv = a * b * (u**2) - a * v + D2 * Lv
+    #GM kinetics, evaluates reaction-diffusion equations
+    du = 1 + (u**2 / v) - u + Du * Lu
+    dv = a * b * (u**2) - a * v + Dv * Lv
 
+    # time integration, forward Euler method
     u += dt * du
     v += dt * dv
 
+    # Record PSR metric periodically for graphing later
     if i % save_every == 0:
         psr_series.append(psr_2d(u, r=exclude_radius))
         times.append(i * dt)
 
-# plot once at the end
+# Final concentration activator field
 plt.imshow(u, cmap="viridis", extent=[0, L, 0, L])
 plt.title(f"u at t = {steps*dt:.2f} s")
 
+# PSR vs time graph 
 plt.figure()
 plt.plot(times, psr_series)
 plt.xlabel("time (s)")

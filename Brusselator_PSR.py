@@ -1,25 +1,42 @@
+# import libraries
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parameters
-L = 100           # domain length
-N = 100            # number of grid points per dimension
-dx = 0.1         # grid spacing used in the finite difference formulas
+# Spatial doman and discretization settings
+L = 100 # domain length
+N = 100 # number of grid points per dimension
+dx = 0.1 # grid spacing used in the finite difference formulas
+
+# time discretization
 dt = 0.01          # time step for the forward Euler method
 steps = 20000     # number of iterations
 
-# Brusselator parameters
-A = 1.0
-B = 1.7
+# !!!FOR TA: SHOULD ONLY CHANGE THESE FOUR FOR DIFFERENT PATTERNS!!!
+# Brusselator parameters settings, labeled as project proposal
+a = 1.0
+b = 1.7
+# Setting diffusion coefficients
 Du = 0.01
 Dv = 0.2
 
+
+# PSR Logging, saves every 1000 euler steps
 save_every = 1000
 exclude_radius = 5
 psr_series = []
 times = []
 
 def psr_2d(field, r=5):
+    """
+    Computing peak sharpness ratio for the 2D scalar field.
+    i.e. u, activator field.
+
+    This function operates as follows:
+    Finds global maximum peak.
+    Creates a radius around the peak.
+    Computes mean standard deviation of sidelobes
+    Computers PSR following PSR = (peak - mu) / sigma
+    """
     peak_idx = np.unravel_index(np.argmax(field), field.shape)
     pi, pj = peak_idx
     peak_val = field[pi, pj]
@@ -40,13 +57,17 @@ y = np.linspace(0, L, N)
 X, Y = np.meshgrid(x, y)
 
 # initialize solution fields (small random perturbations around the homogeneous steady state)
-u0 = A
-v0 = B / A if A != 0 else 0.0
+u0 = a
+v0 = b / a if a != 0 else 0.0
 u = u0 + 0.01 * np.random.randn(N, N)
 v = v0 + 0.01 * np.random.randn(N, N)
 
 # defines the discrete Laplacian
 def laplacian(Z):
+    """
+    Discrete 2D laplacian implemented with a 5-point stecil
+    with periodic boundary conditions.
+    """
     return (
         -4*Z
         + np.roll(Z, 1, axis=0)
@@ -55,22 +76,25 @@ def laplacian(Z):
         + np.roll(Z, -1, axis=1)
     ) / dx**2
 
-# time stepping loop
+# time stepping loop (Eulers Method)
 for i in range(steps):
     # spatial diffusion at the current time step
     Lu = laplacian(u) # discrete Laplacian operator to the u field
     Lv = laplacian(v) # discrete Laplacian operator to the v field
 
-    # evaluates the reaction–diffusion equations, forms the right side of the PDE
-    fu = A - (B + 1.0) * u + (u**2) * v
-    fv = B * u - (u**2) * v
+    # evaluates the reaction–diffusion equations (reaction terms)
+    fu = a - (b + 1.0) * u + (u**2) * v
+    fv = b * u - (u**2) * v
+
+    # Combines into RHS of PDE
     du = Du * Lu + fu
     dv = Dv * Lv + fv
 
-    # time integration, forward euler method
+    # time integration, forward Euler method
     u += dt * du
     v += dt * dv
 
+    # Record PSR metric periodically for graphing later
     if i % save_every == 0:
         psr_series.append(psr_2d(u, r=exclude_radius))
         times.append(i * dt)
@@ -83,15 +107,15 @@ for i in range(steps):
         plt.savefig(f"u_step_{i}.png")
         plt.close()
 
-    # loop repeats for the number of steps inputted above
 
 
-# Final plot
+# Final concentration activator field
 plt.figure(figsize=(6, 5))
 plt.imshow(u, cmap='viridis', extent=[0, L, 0, L])
 plt.title(f"u at t = {steps*dt:.2f} s")
 plt.colorbar()
 
+# PSR vs time graph
 plt.figure()
 plt.plot(times, psr_series)
 plt.xlabel("time (s)")
